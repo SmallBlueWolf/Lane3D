@@ -1,66 +1,13 @@
-# Y轴特征点步长
-feat_y_steps = [5,  10,  15,  20,  30,  40,  50,  60,  80,  100]
-# Y轴anchor步长
-anchor_y_steps = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]
-anchor_len = len(anchor_y_steps)
-
-# 数据集设置
-dataset_type = 'OpenlaneDataset'
-data_root = './data/OpenLane'
-# 图像标准化设置
-# 均值、标准差、是否转RGB
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
-# 输入尺寸
 input_size = (360, 480)
 
-# 训练设置
-train_pipeline = [
-    dict(type='LoadImageFromFile'),
-    dict(type='Resize', img_scale=(input_size[1], input_size[0]), keep_ratio=False),
-    dict(type='Normalize', **img_norm_cfg),
-    dict(type='MaskGenerate', input_size=input_size),
-    dict(type='LaneFormat'),
-    dict(type='Collect', keys=['img', 'img_metas','gt_3dlanes', 'gt_project_matrix', 'mask']),
-]
-
-# 测试设置
-test_pipeline = [
-    dict(type='LoadImageFromFile'),
-    dict(type='Resize', img_scale=(input_size[1], input_size[0]), keep_ratio=False),
-    dict(type='Normalize', **img_norm_cfg),
-    dict(type='MaskGenerate', input_size=input_size),
-    dict(type='LaneFormat'),
-    dict(type='Collect', keys=['img', 'img_metas', 'gt_3dlanes', 'gt_project_matrix', 'mask']),
-]
-
-dataset_config = dict(
-    max_lanes = 25,
-    input_size = input_size,
-)
+feat_y_steps = [5,  10,  15,  20,  30,  40,  50,  60,  80,  100]
+anchor_y_steps = [5,  10,  15,  20,  30,  40,  50,  60,  80,  100]
+anchor_len = len(anchor_y_steps)
 
 
-
-data = dict(
-    samples_per_gpu=16,
-    workers_per_gpu=4,
-    train=dict(
-        type=dataset_type,
-        data_root=data_root,
-        data_list='training.txt',
-        dataset_config=dataset_config,
-        y_steps=anchor_y_steps,
-        pipeline=train_pipeline),
-    test=dict(
-        type=dataset_type,
-        data_root=data_root,
-        y_steps=anchor_y_steps,
-        data_list='validation.txt',
-        dataset_config=dataset_config, 
-        test_mode=True,
-        pipeline=test_pipeline))
-
-# model setting
+# model set
 model = dict(
     type = 'Anchor3DLane',
     backbone=dict(
@@ -70,7 +17,6 @@ model = dict(
     out_indices=(0, 1, 2, 3),
     dilations=(1, 1, 2, 4),
     strides=(1, 2, 1, 1),
-    with_cp=False,
     style='pytorch'),
     pretrained = 'pretrained/resnet18_v1c-b5776b93.pth',
     y_steps = anchor_y_steps,
@@ -79,7 +25,7 @@ model = dict(
         yaws = [30, 20, 15, 10, 7, 5, 3, 1, 0, -1, -3, -5, -7, -10, -15, -20, -30],
         num_x = 45, distances=[3,]),
     db_cfg = dict(
-        org_h = 1280,
+        org_h = 1080,
         org_w = 1920,
         resize_h = 360,
         resize_w = 480,
@@ -93,12 +39,13 @@ model = dict(
         max_2dpoints = 10,
     ),
     attn_dim = 64,
+    iter_reg = 0,
     drop_out=0.,
     num_heads = 2,
     dim_feedforward = 128,
     pre_norm = False,
     feat_size = (45, 60),
-    num_category = 21,
+    num_category = 2,
     loss_lane = dict(
         type = 'LaneLoss',
         loss_weights = dict(cls_loss = 1,
@@ -120,34 +67,9 @@ model = dict(
         conf_threshold = 0),
     test_cfg = dict(
         nms_thres = 2,
-        conf_threshold = 0.2,
-        test_conf = 0.5,
+        conf_threshold = 0.5,
+        test_conf = 0.7,
         refine_vis = True,
         vis_thresh = 0.5
     )
 )
-
-# training setting
-data_shuffle = True
-optimizer = dict(type='Adam', lr=2e-4)
-optimizer_config = dict()
-
-# learning policy
-lr_config = dict(policy='step', step=[50000,], by_epoch=False)
-runner = dict(type='IterBasedRunner', max_iters=60000)
-checkpoint_config = dict(by_epoch=False, interval=5000)
-
-log_config = dict(
-    interval=10,
-    hooks=[
-        dict(type='TextLoggerHook', by_epoch=False),
-        dict(type='TensorboardLoggerHook')
-    ])
-# yapf:enable
-dist_params = dict(backend='nccl')
-log_level = 'INFO'
-load_from = None
-resume_from = None
-workflow = [('train', 10000000)]
-cudnn_benchmark = True
-work_dir = 'output/openlane/anchor3dlane'
