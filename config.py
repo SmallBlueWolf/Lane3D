@@ -51,7 +51,7 @@ data = dict(
         pipeline=test_pipeline))
 
 
-# model set
+# model setting
 model = dict(
     type = 'Anchor3DLane',
     backbone=dict(
@@ -61,6 +61,7 @@ model = dict(
     out_indices=(0, 1, 2, 3),
     dilations=(1, 1, 2, 4),
     strides=(1, 2, 1, 1),
+    with_cp=False,
     style='pytorch'),
     pretrained = 'pretrained/resnet18_v1c-b5776b93.pth',
     y_steps = anchor_y_steps,
@@ -69,7 +70,7 @@ model = dict(
         yaws = [30, 20, 15, 10, 7, 5, 3, 1, 0, -1, -3, -5, -7, -10, -15, -20, -30],
         num_x = 45, distances=[3,]),
     db_cfg = dict(
-        org_h = 1080,
+        org_h = 1280,
         org_w = 1920,
         resize_h = 360,
         resize_w = 480,
@@ -83,13 +84,12 @@ model = dict(
         max_2dpoints = 10,
     ),
     attn_dim = 64,
-    iter_reg = 0,
     drop_out=0.,
     num_heads = 2,
     dim_feedforward = 128,
     pre_norm = False,
     feat_size = (45, 60),
-    num_category = 2,
+    num_category = 21,
     loss_lane = dict(
         type = 'LaneLoss',
         loss_weights = dict(cls_loss = 1,
@@ -111,8 +111,8 @@ model = dict(
         conf_threshold = 0),
     test_cfg = dict(
         nms_thres = 2,
-        conf_threshold = 0.5,
-        test_conf = 0.7,
+        conf_threshold = 0.2,
+        test_conf = 0.5,
         refine_vis = True,
         vis_thresh = 0.5
     )
