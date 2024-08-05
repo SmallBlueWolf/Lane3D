@@ -13,7 +13,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ..build import LOSSES, build_assigner
+from ...build import LOSSES, build_assigner
 from .kornia_focal import FocalLoss
 from .utils import get_class_weight, weight_reduce_loss
 

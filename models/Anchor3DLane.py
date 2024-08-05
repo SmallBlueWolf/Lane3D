@@ -6,7 +6,7 @@ import torch.distributed as dist
 import torch.nn.functional as F
 import numpy as np
 from .module import AnchorGenerator, PositionEmbeddingSine, TransformerEncoderLayer, TransformerEncoder
-from .componets.build import build_backbone, build_neck, build_loss, LANENET2S
+from .build import build_backbone, build_neck, build_loss, LANENET2S
 from .componets.tools import homography_crop_resize
 from .componets.nms import nms_3d
 from collections import OrderedDict
@@ -246,15 +246,15 @@ class Anchor3DLane(BaseModule):
         batch_anchor_features = batch_anchor_features.reshape(-1, self.anchor_feat_channels * self.anchor_feat_len).float()  # [B * N, C * l]
 
         # Predict
-        cls_logits = self.cls_layeriter_idx.float()   # [B * N, C]
-        cls_logits = cls_logits.reshape(batch_size, -1, cls_logits.shape[1]).float()   # [B, N, C]
-        reg_x = self.reg_x_layeriter_idx.float()    # [B * N, l]
-        reg_x = reg_x.reshape(batch_size, -1, reg_x.shape[1]).float()   # [B, N, l]
-        reg_z = self.reg_z_layeriter_idx.float()    # [B * N, l]
-        reg_z = reg_z.reshape(batch_size, -1, reg_z.shape[1]).float()   # [B, N, l]
-        reg_vis = self.reg_vis_layeriter_idx.float()  # [B * N, l]
-        reg_vis = torch.sigmoid(reg_vis).float()
-        reg_vis = reg_vis.reshape(batch_size, -1, reg_vis.shape[1]).float()   # [B, N, l]
+        cls_logits = self.cls_layer[iter_idx](batch_anchor_features)   # [B * N, C]
+        cls_logits = cls_logits.reshape(batch_size, -1, cls_logits.shape[1])   # [B, N, C]
+        reg_x = self.reg_x_layer[iter_idx](batch_anchor_features)    # [B * N, l]
+        reg_x = reg_x.reshape(batch_size, -1, reg_x.shape[1])   # [B, N, l]
+        reg_z = self.reg_z_layer[iter_idx](batch_anchor_features)    # [B * N, l]
+        reg_z = reg_z.reshape(batch_size, -1, reg_z.shape[1])   # [B, N, l]
+        reg_vis = self.reg_vis_layer[iter_idx](batch_anchor_features)  # [B * N, l]
+        reg_vis = torch.sigmoid(reg_vis)
+        reg_vis = reg_vis.reshape(batch_size, -1, reg_vis.shape[1])   # [B, N, l]
 
         # Add offsets to anchors
         reg_proposals = torch.zeros(batch_size, len(self.anchors), 5 + self.anchor_len * 3 + self.num_category, device=project_matrixes.device).float()

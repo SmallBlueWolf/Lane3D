@@ -7,7 +7,7 @@ from mmcv.cnn import build_conv_layer, build_norm_layer, build_plugin_layer
 from mmengine.model import BaseModule
 from torch.nn import BatchNorm2d as _BatchNorm
 from torch.nn import Sequential
-from ..build import BACKBONES
+from ...build import BACKBONES
 
 
 class ResLayer(Sequential):

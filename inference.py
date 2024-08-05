@@ -1,19 +1,28 @@
-
-from mmengine import Config
-from models.componets.build import LANENET2S
+from mmengine import Config, build_from_cfg
 from mmengine.runner import load_checkpoint
-import mmcv
-import os
-import torch
-import tqdm
-import json
-import torch.nn.functional as F
-from models.Anchor3DLane import Anchor3DLane
-from models.componets.backbones.resnet import ResNetV1c
-from models.componets.losses.lane_loss import LaneLoss
-from models.componets.assigner.topk_assigner import TopkAssigner
+from models.build import MODELS
+from data_tools.build import DATASETS
+from data_tools.builder import build_dataloader, get_device
+from data_tools.OpenlaneDataset import OpenlaneDataset
+from mmengine.model import revert_sync_batchnorm
+from models.collate import collate
+from inference_module import build_dp, inference_openlane, evaluation
+
 
 if __name__ == '__main__':
     cfg = Config.fromfile('config.py')
-    model = LANENET2S.build(cfg.model)
-    print(model)
+    model = MODELS.build(cfg.model)
+    model = revert_sync_batchnorm(model)
+    model = build_dp(model, get_device(), device_ids=[0])
+    dataset = build_from_cfg(cfg.data.test, DATASETS)
+    data_loader = build_dataloader(
+        dataset=dataset,
+        samples_per_gpu=16,
+        workers_per_gpu=1,
+        custom_collate=collate
+    )
+    # inference_openlane(model, data_loader, "./output")
+    evaluation(data_loader, "./output", 0.5, r"./data/ew.json")
+
+
+

@@ -8,7 +8,7 @@
 
 import torch
 import numpy as np
-from ..build import ASSIGNER
+from ...build import ASSIGNER
 from .distance_metric import *
 
 INFINITY = 987654.

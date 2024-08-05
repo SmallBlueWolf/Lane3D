@@ -3,8 +3,52 @@ img_norm_cfg = dict(
 input_size = (360, 480)
 
 feat_y_steps = [5,  10,  15,  20,  30,  40,  50,  60,  80,  100]
-anchor_y_steps = [5,  10,  15,  20,  30,  40,  50,  60,  80,  100]
+anchor_y_steps = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]
 anchor_len = len(anchor_y_steps)
+
+data_root = "./data"
+
+test_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(type='Resize', img_scale=(input_size[1], input_size[0]), keep_ratio=False),
+    dict(type='Normalize', **img_norm_cfg),
+    dict(type='MaskGenerate', input_size=input_size),
+    dict(type='LaneFormat'),
+    dict(type='Collect', keys=['img', 'img_metas', 'gt_3dlanes', 'gt_project_matrix', 'mask']),
+]
+
+dataset_config = dict(
+    max_lanes = 25,
+    input_size = input_size,
+)
+
+train_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(type='Resize', img_scale=(input_size[1], input_size[0]), keep_ratio=False),
+    dict(type='Normalize', **img_norm_cfg),
+    dict(type='MaskGenerate', input_size=input_size),
+    dict(type='LaneFormat'),
+    dict(type='Collect', keys=['img', 'img_metas', 'gt_3dlanes', 'gt_project_matrix', 'mask']),
+]
+
+data = dict(
+    samples_per_gpu=16,
+    workers_per_gpu=4,
+    train=dict(
+        type='OpenlaneDataset',
+        data_root=data_root,
+        data_list='training.txt',
+        dataset_config=dataset_config,
+        y_steps=anchor_y_steps,
+        pipeline=train_pipeline),
+    test=dict(
+        type='OpenlaneDataset',
+        data_root=data_root,
+        y_steps=anchor_y_steps,
+        data_list='ew.txt',
+        dataset_config=dataset_config, 
+        test_mode=True,
+        pipeline=test_pipeline))
 
 
 # model set

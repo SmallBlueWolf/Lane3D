@@ -7,7 +7,7 @@
 # --------------------------------------------------------
 
 import torch
-from ..build import ASSIGNER
+from ...build import ASSIGNER
 from .distance_metric import Euclidean_dis, Manhattan_dis, Partial_Euclidean_dis
 
 INFINITY = 987654.
