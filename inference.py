@@ -25,5 +25,5 @@ if __name__ == '__main__':
         'shuffle': False  # Not shuffle by default
     }
     data_loader = build_dataloader(dataset=dataset, custom_collate=collate, **test_loader_cfg)
-    inference_openlane(model, data_loader, "./output")
-    evaluation(data_loader, "./output", 0.5, r"./data/ew.json")
+    inference_openlane(model, data_loader, "./output(3)")
+    evaluation(data_loader, "./output(3)", 0.5, r"./data/ew.json")

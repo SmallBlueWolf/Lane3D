@@ -2,7 +2,9 @@ import numpy as np
 import mmcv
 import mmengine
 import os
+import cv2
 from .build import PIPELINES
+from ..augmentation.augumentation import augumentation
 
 @PIPELINES.register_module()
 class LoadImageFromFile(object):
@@ -59,15 +61,29 @@ class LoadImageFromFile(object):
         else:
             filename = results['img_info']['filename']
         filename = filename.replace("/cache_dense", "")
-        try:
+        if os.path.exists(filename):
             img_bytes = self.file_client.get(filename)
-        except:
-            filename = filename.replace("/validation", "/training")
-            img_bytes = self.file_client.get(filename)
+        elif os.path.exists(filename.replace("/validation", "/training")):
+            img_bytes = self.file_client.get(filename.replace("/validation", "/training"))
+        else:
+            raise Exception("File not found.")
         img = mmcv.imfrombytes(
             img_bytes, flag=self.color_type, backend=self.imdecode_backend)
+        img = np.array(augumentation(img, use_cuda=True))
+        
         if self.to_float32:
             img = img.astype(np.float32)
+        filename = filename.replace('.jpg', '.png')
+        gfilename = filename.replace('images', 'images(depth)')
+        if os.path.exists(gfilename):
+            gray = cv2.imread(gfilename, cv2.IMREAD_GRAYSCALE)
+        elif os.path.exists(gfilename.replace("/validation", "/training")):
+            newgfilename = gfilename.replace("/validation", "/training")
+            gray = cv2.imread(newgfilename, cv2.IMREAD_GRAYSCALE)
+        else:
+            raise Exception("File not found.")
+        
+        img = img + gray[:, :, np.newaxis]
 
         results['filename'] = filename
         results['ori_filename'] = results['img_info']['filename']
