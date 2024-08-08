@@ -513,6 +513,8 @@ class ResNet(BaseModule):
         if depth not in self.arch_settings:
             raise KeyError(f'invalid depth {depth} for resnet')
 
+        pretrained = None
+        
         self.pretrained = pretrained
         self.zero_init_residual = zero_init_residual
         block_init_cfg = None

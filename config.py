@@ -11,7 +11,7 @@ data_root = "./data"
 test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='Resize', img_scale=(input_size[1], input_size[0]), keep_ratio=False),
-    dict(type='Normalize', **img_norm_cfg),
+    # dict(type='Normalize', **img_norm_cfg),
     dict(type='MaskGenerate', input_size=input_size),
     dict(type='LaneFormat'),
     dict(type='Collect', keys=['img', 'img_metas', 'gt_3dlanes', 'gt_project_matrix', 'mask']),
@@ -57,6 +57,7 @@ model = dict(
     backbone=dict(
     type='ResNetV1c',
     depth=18,
+    in_channels=4,
     num_stages=4,
     out_indices=(0, 1, 2, 3),
     dilations=(1, 1, 2, 4),

@@ -3,6 +3,7 @@ import mmcv
 import mmengine
 import os
 from .build import PIPELINES
+import cv2
 
 @PIPELINES.register_module()
 class LoadImageFromFile(object):
@@ -49,7 +50,6 @@ class LoadImageFromFile(object):
         Returns:
             dict: The dict contains loaded image and meta information.
         """
-
         if self.file_client is None:
             self.file_client = mmengine.FileClient(**self.file_client_args)
 
@@ -62,13 +62,21 @@ class LoadImageFromFile(object):
         try:
             img_bytes = self.file_client.get(filename)
         except:
-            filename = filename.replace("/validation", "/training")
-            img_bytes = self.file_client.get(filename)
+            newfilename = filename.replace("/validation", "/training")
+            img_bytes = self.file_client.get(newfilename)
         img = mmcv.imfrombytes(
             img_bytes, flag=self.color_type, backend=self.imdecode_backend)
         if self.to_float32:
             img = img.astype(np.float32)
-
+        gfilename = filename.replace('images', 'images(depth)')
+        gfilename = gfilename.replace('.jpg', '.png')
+        try:
+            gray = cv2.imread(gfilename, cv2.IMREAD_GRAYSCALE)
+        except:
+            newgfilename = gfilename.replace("/validation", "/training")
+            gray = cv2.imread(newgfilename, cv2.IMREAD_GRAYSCALE)
+        gray = np.expand_dims(gray, axis=2)
+        img = np.concatenate([img,gray], axis=-1)
         results['filename'] = filename
         results['ori_filename'] = results['img_info']['filename']
         results['img'] = img
