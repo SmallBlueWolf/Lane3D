@@ -59,22 +59,25 @@ class LoadImageFromFile(object):
         else:
             filename = results['img_info']['filename']
         filename = filename.replace("/cache_dense", "")
-        try:
+        
+        if os.path.exists(filename):
             img_bytes = self.file_client.get(filename)
-        except:
-            newfilename = filename.replace("/validation", "/training")
-            img_bytes = self.file_client.get(newfilename)
+        elif os.path.exists(filename.replace("/validation", "/training")):
+            img_bytes = self.file_client.get(filename.replace("/validation", "/training"))
+        else:
+            raise Exception(f"{filename} img not found")
         img = mmcv.imfrombytes(
             img_bytes, flag=self.color_type, backend=self.imdecode_backend)
         if self.to_float32:
             img = img.astype(np.float32)
         gfilename = filename.replace('images', 'images(depth)')
         gfilename = gfilename.replace('.jpg', '.png')
-        try:
+        if os.path.exists(gfilename):
             gray = cv2.imread(gfilename, cv2.IMREAD_GRAYSCALE)
-        except:
-            newgfilename = gfilename.replace("/validation", "/training")
-            gray = cv2.imread(newgfilename, cv2.IMREAD_GRAYSCALE)
+        elif os.path.exists(gfilename.replace("/validation", "/training")):
+            gray = cv2.imread(gfilename.replace("/validation", "/training"), cv2.IMREAD_GRAYSCALE)
+        else:
+            raise Exception(f"{filename} img not found")
         gray = np.expand_dims(gray, axis=2)
         img = np.concatenate([img,gray], axis=-1)
         results['filename'] = filename
