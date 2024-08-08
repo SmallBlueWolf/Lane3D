@@ -1,3 +1,8 @@
 data/
+data(old2)/
+data(old3)/
 output/
 *.pth
+pretrained
+__pycache__/
+**/__pycache__

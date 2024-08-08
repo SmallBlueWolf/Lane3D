@@ -1,6 +1,6 @@
 from .build import DATASETS
 import numpy as np
-from torch.utils.data import Dataset
+from torch.utils.data.dataset import Dataset
 import os
 import cv2
 from .pipelines.Compose import Compose

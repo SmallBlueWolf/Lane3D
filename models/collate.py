@@ -61,7 +61,6 @@ def collate(batch: Sequence, samples_per_gpu: int = 1):
                 else:
                     raise ValueError(
                         'pad_dims should be either None or integers (1-3)')
-
         else:
             for i in range(0, len(batch), samples_per_gpu):
                 stacked.append(
